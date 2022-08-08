@@ -27,7 +27,7 @@ public class DeliveryServiceControl {
 	public String SearchDelivery(@RequestBody DeliveryServiceModel serviceModel) throws IOException
 	{
 		String serviceName=serviceModel.getServiceName();
-		String invoiceNumber=serviceModel.getIvoiceNumber();
+		String invoiceNumber=serviceModel.getInvoiceNumber();
 		
 		switch(serviceName)
 		{
@@ -51,6 +51,7 @@ public class DeliveryServiceControl {
 	
 	public void SearchRozen(String invoiceNumber) throws IOException 
 	{
+		//invoiceNumber : 운송장 번호
 		String baseURL="https://www.ilogen.com";
 		String path="";
 		String reData="";
@@ -69,7 +70,21 @@ public class DeliveryServiceControl {
 		_httpHandler.AddRequestHeader("Host","www.ilogen.com");
 		
 		_httpHandler.Send(baseURL+path);
-		reData=_httpHandler.responseText;
+		reData=_httpHandler.getResponseText();
+		
+		/*//Send Data
+		_httpHandler.AddRequestHeader("Referer", "https://www.ilogen.com/web/personal/tkSearch?t=1");
+		path="/web/personal/tkSearch";
+		_httpHandler.Send(baseURL+path);
+		reData=_httpHandler.getResponseText();*/
+		
+		
+		//Send Data
+		_httpHandler.AddRequestHeader("Referer", "https://www.ilogen.com/web");
+		path="/web/personal/trace/"+invoiceNumber;
+		_httpHandler.Send(baseURL+path);
+		reData=_httpHandler.getResponseText();
+		System.out.println(reData);
 		
 		
 		

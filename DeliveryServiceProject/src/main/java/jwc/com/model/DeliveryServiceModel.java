@@ -9,13 +9,15 @@ public class DeliveryServiceModel {
 	public void setServiceName(String serviceName) {
 		this.serviceName = serviceName;
 	}
-	public String getIvoiceNumber() {
-		return ivoiceNumber;
+
+	public String getInvoiceNumber() {
+		return invoiceNumber;
 	}
-	public void setIvoiceNumber(String ivoiceNumber) {
-		this.ivoiceNumber = ivoiceNumber;
+	public void setInvoiceNumber(String invoiceNumber) {
+		this.invoiceNumber = invoiceNumber;
 	}
-	private String ivoiceNumber;
+
+	private String invoiceNumber;
 	
 	
 
