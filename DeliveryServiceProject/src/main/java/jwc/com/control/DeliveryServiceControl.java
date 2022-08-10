@@ -1,8 +1,11 @@
 package jwc.com.control;
 import java.io.IOException;
 
+import org.json.JSONObject;
+import org.json.JSONArray;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -89,12 +92,62 @@ public class DeliveryServiceControl {
 		reData=_httpHandler.getResponseText();
 		doc=Jsoup.parse(reData);
 		
-		Elements data_tkInfo=doc.getElementsByClass("data tkInfo");
-		String a=data_tkInfo.attr("th");
+		JSONArray deliveryInfoJsonArray=new JSONArray();
+		
+		
+		Elements horizon_pdInfoList=doc.getElementsByClass("horizon pdInfo");
+		Elements data_tkInfoList=doc.getElementsByClass("data tkInfo");
+		
+		//배송내역에 대한 json파싱
+		for(Element element : data_tkInfoList)
+		{
+			Elements cellList=element.select("tbody>tr");
+
+			JSONObject deliveryInfoJson=new JSONObject();
+			for(Element row_tr:cellList)
+			{
+				deliveryInfoJson.put("date", row_tr.child(0).text());			// 날짜
+				deliveryInfoJson.put("establishment",row_tr.child(1).text());	// 사업장
+				deliveryInfoJson.put("deliverystate",row_tr.child(2).text());	// 배송상태
+				deliveryInfoJson.put("deliverycontent",row_tr.child(3).text());	// 배송내용
+				deliveryInfoJson.put("manager",row_tr.child(4).text());			// 담당직원
+				deliveryInfoJson.put("underwriter",row_tr.child(5).text());		// 인수자
+				deliveryInfoJson.put("office",row_tr.child(6).text());			// 영업소
+				deliveryInfoJson.put("tel",row_tr.child(7).text());				// 연락처
+
+			}
+			deliveryInfoJsonArray.put(deliveryInfoJson);
+		}
+		
+		// 물품정보에 대한 json파싱
+		JSONObject contentInfoJson=new JSONObject();
+		for(Element element : horizon_pdInfoList)
+		{
+			Elements cellList=element.select("tbody");
+			
+			contentInfoJson.put("invoice",cellList.get(0).child(0).child(1).text());			// 송장번호
+			contentInfoJson.put("purchase",cellList.get(0).child(0).child(3).text());			// 상품명
+			contentInfoJson.put("collectiondate",cellList.get(0).child(1).child(1).text());		// 집하일자
+			contentInfoJson.put("deliveryspot",cellList.get(0).child(1).child(3).text());		// 배송지점
+			contentInfoJson.put("collectionspot",cellList.get(0).child(2).child(1).text());		// 집하지점
+			contentInfoJson.put("quantity",cellList.get(0).child(2).child(3).text());			// 수량
+			contentInfoJson.put("sendname",cellList.get(0).child(3).child(1).text());			// 보내시는 분
+			contentInfoJson.put("recievename",cellList.get(0).child(3).child(3).text());		// 받으시는 분
+			contentInfoJson.put("address",cellList.get(0).child(4).child(1).text());			// 주소
+			
+			
+		}
 	}
 	
 	public void SearchHanjin(String invoiceNumber) throws IOException
 	{
+		
+		/*
+		 * {
+"serviceName":"hanjin",
+"invoiceNumber":"530633824744"
+}
+		 */
 		String baseURL="http://www.hanjin.co.kr";
 		String path="";
 		String reData="";
