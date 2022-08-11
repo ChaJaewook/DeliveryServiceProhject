@@ -35,10 +35,11 @@ public class DeliveryServiceControl {
 		String serviceName=serviceModel.getServiceName();
 		String invoiceNumber=serviceModel.getInvoiceNumber();
 		
+		String result="";
 		switch(serviceName)
 		{
 			case "rozen":
-				SearchRozen(invoiceNumber);
+				result=SearchRozen(invoiceNumber);
 				break;
 			case "hanjin":
 				SearchHanjin(invoiceNumber);
@@ -52,11 +53,17 @@ public class DeliveryServiceControl {
 			default:
 				break;
 		}
-		return "";
+		return result;
 	}
 	
-	public void SearchRozen(String invoiceNumber) throws IOException 
+	public String SearchRozen(String invoiceNumber) throws IOException 
 	{
+		/*
+		 * {
+			"serviceName":"rozen",
+			"invoiceNumber":"33212191880"
+			}
+		 */
 		//invoiceNumber : 운송장 번호
 		String baseURL="https://www.ilogen.com";
 		String path="";
@@ -78,12 +85,6 @@ public class DeliveryServiceControl {
 		_httpHandler.Send(baseURL+path);
 		reData=_httpHandler.getResponseText();
 		
-		/*//Send Data
-		_httpHandler.AddRequestHeader("Referer", "https://www.ilogen.com/web/personal/tkSearch?t=1");
-		path="/web/personal/tkSearch";
-		_httpHandler.Send(baseURL+path);
-		reData=_httpHandler.getResponseText();*/
-		
 		
 		//Send Data
 		_httpHandler.AddRequestHeader("Referer", "https://www.ilogen.com/web");
@@ -97,6 +98,7 @@ public class DeliveryServiceControl {
 		
 		Elements horizon_pdInfoList=doc.getElementsByClass("horizon pdInfo");
 		Elements data_tkInfoList=doc.getElementsByClass("data tkInfo");
+		Elements horizon_tkAreaInfoInfoList=doc.getElementsByClass("horizon tkAreaInfo");
 		
 		//배송내역에 대한 json파싱
 		for(Element element : data_tkInfoList)
@@ -133,10 +135,28 @@ public class DeliveryServiceControl {
 			contentInfoJson.put("quantity",cellList.get(0).child(2).child(3).text());			// 수량
 			contentInfoJson.put("sendname",cellList.get(0).child(3).child(1).text());			// 보내시는 분
 			contentInfoJson.put("recievename",cellList.get(0).child(3).child(3).text());		// 받으시는 분
-			contentInfoJson.put("address",cellList.get(0).child(4).child(1).text());			// 주소
-			
-			
+			contentInfoJson.put("address",cellList.get(0).child(4).child(1).text());			// 주소	
 		}
+		
+		JSONObject storeInfoJson=new JSONObject();
+		for(Element element:horizon_tkAreaInfoInfoList)
+		{
+			Elements cellList=element.select("tbody");
+			
+			storeInfoJson.put("lasttime", cellList.get(0).child(0).child(1).text());			// 최종처리시간
+			storeInfoJson.put("expecttime", cellList.get(0).child(0).child(3).text());			// 배송예정시간
+			storeInfoJson.put("laststore", cellList.get(0).child(1).child(1).text());			// 최종처리 사업장
+			storeInfoJson.put("telephone1", cellList.get(0).child(1).child(3).text());			// 연락처1
+			storeInfoJson.put("manager", cellList.get(0).child(2).child(1).text());				// 영업사원
+			storeInfoJson.put("telephone2", cellList.get(0).child(2).child(3).text());			// 연락처2
+		}
+		
+		JSONObject resultJson=new JSONObject();
+		resultJson.put("deliveryInfo", deliveryInfoJsonArray);
+		resultJson.put("contentInfo", contentInfoJson);
+		resultJson.put("storeInfo", storeInfoJson);
+		
+		return resultJson.toString();
 	}
 	
 	public void SearchHanjin(String invoiceNumber) throws IOException
@@ -144,9 +164,9 @@ public class DeliveryServiceControl {
 		
 		/*
 		 * {
-"serviceName":"hanjin",
-"invoiceNumber":"530633824744"
-}
+			"serviceName":"hanjin",
+			"invoiceNumber":"530633824744"
+			}
 		 */
 		String baseURL="http://www.hanjin.co.kr";
 		String path="";
@@ -169,6 +189,33 @@ public class DeliveryServiceControl {
 		path=String.format("/kor/CMS/DeliveryMgr/WaybillResult.do?mCode=MN038&wblnum=%s&schLang=KR&wblnumText=", invoiceNumber);
 		_httpHandler.Send(baseURL+path);
 		reData=_httpHandler.getResponseText();
+		
+		//배송내역에 대한 json파싱
+		
+		doc=Jsoup.parse(reData);
+		Elements board_list_tableInfoList=doc.getElementsByClass("board-list-table");
+		Elements delivery_tblInfoList=doc.getElementsByClass("board-list-table delivery-tbl");
+		
+		for(Element element:delivery_tblInfoList)
+		{
+			System.out.println(element.select("td[data-label='상품명']").text());
+			System.out.println(element.select("td[data-label='보내는 분']").text());
+			System.out.println(element.select("td[data-label='받는 분']").text());
+			System.out.println(element.select("td[data-label='받는 주소']").text());
+		}
+		
+		for(Element element:board_list_tableInfoList)
+		{
+			Elements cellList=element.select("tbody>tr[class='']");
+			for(Element cellElement : cellList)
+			{
+				System.out.println(cellElement.child(0).text());
+				System.out.println(cellElement.child(1).text());
+				System.out.println(cellElement.child(2).text());
+				System.out.println(cellElement.child(3).text());
+			}
+		}
+		
 		System.out.println(reData);
 	}
 	
