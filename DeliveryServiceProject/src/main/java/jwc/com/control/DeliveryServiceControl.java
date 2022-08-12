@@ -42,7 +42,7 @@ public class DeliveryServiceControl {
 				result=SearchRozen(invoiceNumber);
 				break;
 			case "hanjin":
-				SearchHanjin(invoiceNumber);
+				result=SearchHanjin(invoiceNumber);
 				break;
 			case "CJ":
 				SearchCJ(invoiceNumber);
@@ -58,12 +58,7 @@ public class DeliveryServiceControl {
 	
 	public String SearchRozen(String invoiceNumber) throws IOException 
 	{
-		/*
-		 * {
-			"serviceName":"rozen",
-			"invoiceNumber":"33212191880"
-			}
-		 */
+
 		//invoiceNumber : 운송장 번호
 		String baseURL="https://www.ilogen.com";
 		String path="";
@@ -159,15 +154,10 @@ public class DeliveryServiceControl {
 		return resultJson.toString();
 	}
 	
-	public void SearchHanjin(String invoiceNumber) throws IOException
+	public String SearchHanjin(String invoiceNumber) throws IOException
 	{
 		
-		/*
-		 * {
-			"serviceName":"hanjin",
-			"invoiceNumber":"530633824744"
-			}
-		 */
+		
 		String baseURL="http://www.hanjin.co.kr";
 		String path="";
 		String reData="";
@@ -191,40 +181,83 @@ public class DeliveryServiceControl {
 		reData=_httpHandler.getResponseText();
 		
 		//배송내역에 대한 json파싱
+		JSONObject resultJson=new JSONObject();
 		
 		doc=Jsoup.parse(reData);
 		Elements board_list_tableInfoList=doc.getElementsByClass("board-list-table");
 		Elements delivery_tblInfoList=doc.getElementsByClass("board-list-table delivery-tbl");
+		Elements sognjang_numInfoList=doc.getElementsByClass("songjang-num");
+		Elements delivery_timeInfoList=doc.getElementsByClass("delivery-time");
 		
+		//기본정보 파싱
+		JSONObject senderInfoJson=new JSONObject();
 		for(Element element:delivery_tblInfoList)
 		{
-			System.out.println(element.select("td[data-label='상품명']").text());
-			System.out.println(element.select("td[data-label='보내는 분']").text());
-			System.out.println(element.select("td[data-label='받는 분']").text());
-			System.out.println(element.select("td[data-label='받는 주소']").text());
+			senderInfoJson.put("productname",element.select("td[data-label='상품명']").text());
+			senderInfoJson.put("sender",element.select("td[data-label='상품명']").text());
+			senderInfoJson.put("receiver",element.select("td[data-label='받는 분']").text());
+			senderInfoJson.put("receiveraddress",element.select("td[data-label='받는 주소']").text());
 		}
 		
+		
+		//배송현황 파싱
+		JSONArray deliveryInfoJsonArray=new JSONArray();
 		for(Element element:board_list_tableInfoList)
 		{
+			
 			Elements cellList=element.select("tbody>tr[class='']");
+			if(cellList.isEmpty())
+				continue;
+			JSONObject deliveryInfoJson=new JSONObject();
 			for(Element cellElement : cellList)
 			{
-				System.out.println(cellElement.child(0).text());
-				System.out.println(cellElement.child(1).text());
-				System.out.println(cellElement.child(2).text());
-				System.out.println(cellElement.child(3).text());
+				
+				deliveryInfoJson.put("date", cellElement.child(0).text());// 날짜
+				deliveryInfoJson.put("time", cellElement.child(1).text());// 시간
+				deliveryInfoJson.put("productspot", cellElement.child(2).text());// 상품위치
+				deliveryInfoJson.put("deliveryprogress", cellElement.child(3).text());// 배송 진행사항
 			}
+			deliveryInfoJsonArray.put(deliveryInfoJson);
 		}
 		
-		System.out.println(reData);
+		//운송장 정보, 상태 
+		JSONObject deliveryStateJson=new JSONObject();
+		for(Element element:sognjang_numInfoList)
+		{
+			deliveryStateJson.put("invoice",element.select("span[class='num']").text());			//운송장번호
+		}
+		for(Element element:delivery_timeInfoList)
+		{
+			deliveryStateJson.put("date",element.select("span[class='date']").text());				//날짜
+			deliveryStateJson.put("time",element.select("span[class='time']").text());				//시간
+			deliveryStateJson.put("statecomment",element.select("p[class='comm-sec']").text()); 	//상태
+		}
+		
+		resultJson.put("senderInfo", senderInfoJson);
+		resultJson.put("deliveryInfo", deliveryInfoJsonArray);
+		resultJson.put("deliverySate", deliveryStateJson);
+		
+		
+		
+		return resultJson.toString();
 	}
 	
-	public void SearchCJ(String invoiceNumber)
+	public void SearchCJ(String invoiceNumber) throws IOException
 	{
-		String baseURL="https://www.ilogen.com";
-		String path="";
+		String baseURL="https://www.cjlogistics.com";
+		String path="/ko/tool/parcel/tracking";
 		String reData="";
 		String postData="";
+		
+		_httpHandler.ClearHeader();
+		_httpHandler.AddRequestHeader("Host","www.cjlogistics.com");
+		_httpHandler.AddRequestHeader("Connection","keep-alive");
+		_httpHandler.AddRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36 Edg/104.0.1293.47");
+		_httpHandler.AddRequestHeader("Connection","keep-alive");
+		
+		_httpHandler.Send(baseURL+path);
+		reData=_httpHandler.getResponseText();
+		
 	}
 	
 	public void SearchLotte(String invoiceNumber)
