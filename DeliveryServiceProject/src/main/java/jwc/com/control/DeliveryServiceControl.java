@@ -19,6 +19,9 @@ import jwc.com.model.DeliveryServiceModel;
 @RestController
 @RequestMapping("api")
 
+
+// try catch로 오류처리하고 finally로 close필요
+
 public class DeliveryServiceControl {
 	
 	HttpHandler _httpHandler=new HttpHandler();
@@ -38,17 +41,20 @@ public class DeliveryServiceControl {
 		String result="";
 		switch(serviceName)
 		{
-			case "rozen":
+			case "rozen": //로젠택배
 				result=SearchRozen(invoiceNumber);
 				break;
-			case "hanjin":
+			case "hanjin": //한진택배
 				result=SearchHanjin(invoiceNumber);
 				break;
-			case "CJ":
-				SearchCJ(invoiceNumber);
+			case "CJ": //CJ대한통운
+				result=SearchCJ(invoiceNumber);
 				break;
-			case "Lotte":
+			case "Lotte": //롯데택배
 				SearchLotte(invoiceNumber);
+				break;
+			case "PostOffice"://우체국 택배
+				SearchPostOffice(invoiceNumber);
 				break;
 			default:
 				break;
@@ -242,13 +248,15 @@ public class DeliveryServiceControl {
 		return resultJson.toString();
 	}
 	
-	public void SearchCJ(String invoiceNumber) throws IOException
+	public String SearchCJ(String invoiceNumber) throws IOException
 	{
 		String baseURL="https://www.cjlogistics.com";
 		String path="/ko/tool/parcel/tracking";
 		String reData="";
 		String postData="";
-		
+		String _csrf=""; 
+				
+		//Condition Check
 		_httpHandler.ClearHeader();
 		_httpHandler.AddRequestHeader("Host","www.cjlogistics.com");
 		_httpHandler.AddRequestHeader("Connection","keep-alive");
@@ -258,14 +266,111 @@ public class DeliveryServiceControl {
 		_httpHandler.Send(baseURL+path);
 		reData=_httpHandler.getResponseText();
 		
+		System.out.println(reData);
+		doc=Jsoup.parse(reData);
+		_csrf=doc.select("input[name='_csrf']").attr("value");
+		
+		//배송내용 스크래핑
+		//리턴값이 Json형태
+		path="/ko/tool/parcel/tracking-detail";
+		_httpHandler.ClearHeader();
+		//_httpHandler.AddRequestHeader("cache","no-cache");
+		_httpHandler.AddRequestHeader("Host","www.cjlogistics.com");
+		_httpHandler.AddRequestHeader("Accept","application/json, text/javascript, */*; q=0.01");
+		_httpHandler.AddRequestHeader("Accept-Encoding","gzip, deflate, br");
+		_httpHandler.AddRequestHeader("Accept-Language","ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
+		_httpHandler.AddRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+		_httpHandler.AddRequestHeader("X-Requested-With","XMLHttpRequest");
+		_httpHandler.AddRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+		//_httpHandler.AddRequestHeader("Content-Type","application/json;charset=UTF-8");
+		
+		_httpHandler.AddRequestHeader("Origin","https://www.cjlogistics.com");
+		_httpHandler.AddRequestHeader("Connection","keep-alive");
+		_httpHandler.AddRequestHeader("Referer","https://www.cjlogistics.com/ko/tool/parcel/tracking");
+		postData="_csrf="+_csrf+"&";
+		postData+="paramInvcNo="+invoiceNumber;
+		
+		_httpHandler.Send(baseURL+path,postData);
+		reData=_httpHandler.getResponseText();
+		
+		return reData;
+		
 	}
 	
-	public void SearchLotte(String invoiceNumber)
+	public void SearchLotte(String invoiceNumber) throws IOException
 	{
-		String baseURL="https://www.ilogen.com";
+		String baseURL="https://www.lotteglogis.com/";
 		String path="";
 		String reData="";
 		String postData="";
+		
+		_httpHandler.ClearHeader();
+		_httpHandler.AddRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+		_httpHandler.AddRequestHeader("Accept-Encoding","gzip, deflate, br");
+		_httpHandler.AddRequestHeader("Accept-Language","ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
+		_httpHandler.AddRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+		_httpHandler.AddRequestHeader("Referer","https://search.naver.com/search.naver?where=nexearch&sm=tab_jum&query=%EB%A1%AF%EB%8D%B0%ED%83%9D%EB%B0%B0");
+		_httpHandler.AddRequestHeader("Connection","keep-alive");
+		_httpHandler.AddRequestHeader("Host","www.lotteglogis.com");
+		
+		_httpHandler.Send(baseURL);
+		reData=_httpHandler.getResponseText();
+		
+
+		_httpHandler.ClearHeader();
+		_httpHandler.AddRequestHeader("Cache-Control","max-age=0");
+		_httpHandler.AddRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+		_httpHandler.AddRequestHeader("Accept-Encoding","gzip, deflate, br");
+		_httpHandler.AddRequestHeader("Accept-Language","ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
+		_httpHandler.AddRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+		_httpHandler.AddRequestHeader("Referer","https://www.lotteglogis.com/home/reservation/tracking/invoiceView");
+		_httpHandler.AddRequestHeader("Connection","keep-alive");
+		_httpHandler.AddRequestHeader("Host","www.lotteglogis.com");
+		_httpHandler.AddRequestHeader("Content-Type","application/x-www-form-urlencoded");
+		
+		path="/home/reservation/tracking/linkView";
+		postData="InvNo="+invoiceNumber;
+		_httpHandler.Send(baseURL+path,postData);
+		reData=_httpHandler.getResponseText();
+		System.out.println(reData);
+		
+		doc=Jsoup.parse(reData);
+		
+		JSONObject deliveryState=new JSONObject();
+		
+		
+		Elements tblH_mt60=doc.getElementsByClass("tblH mt60");
+		Elements tblH=doc.getElementsByClass("tblH").not("tblH mt60");
+		
+		for(Element element : tblH_mt60)
+		{
+			Elements cellList=element.select("tbody>tr>td");
+			deliveryState.put("invoicenumber", cellList.get(0).text());
+			deliveryState.put("sender", cellList.get(1).text());
+			deliveryState.put("approach", cellList.get(2).text());
+			deliveryState.put("deliveryresult", cellList.get(3).text());
+
+		}
+		
+		for(Element element:tblH)
+		{
+			Elements cellList=element.select("tbody>tr");
+			for(Element cell : cellList)
+			{
+				Elements dataList=cell.select("td");
+				System.out.println(dataList.get(0).text());
+				System.out.println(dataList.get(1).text());
+				System.out.println(dataList.get(2).text());
+				System.out.println(dataList.get(3).text());
+			}
+		}
+		
+	}
+	
+	
+	public String SearchPostOffice(String invoiceNumber) throws IOException
+	{
+		return "";
 	}
 	
 }
