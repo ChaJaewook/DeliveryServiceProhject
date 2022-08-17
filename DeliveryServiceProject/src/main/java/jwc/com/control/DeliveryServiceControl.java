@@ -51,7 +51,7 @@ public class DeliveryServiceControl {
 				result=SearchCJ(invoiceNumber);
 				break;
 			case "Lotte": //롯데택배
-				SearchLotte(invoiceNumber);
+				result=SearchLotte(invoiceNumber);
 				break;
 			case "PostOffice"://우체국 택배
 				SearchPostOffice(invoiceNumber);
@@ -62,7 +62,7 @@ public class DeliveryServiceControl {
 		return result;
 	}
 	
-	public String SearchRozen(String invoiceNumber) throws IOException 
+	private String SearchRozen(String invoiceNumber) throws IOException 
 	{
 
 		//invoiceNumber : 운송장 번호
@@ -160,7 +160,7 @@ public class DeliveryServiceControl {
 		return resultJson.toString();
 	}
 	
-	public String SearchHanjin(String invoiceNumber) throws IOException
+	private String SearchHanjin(String invoiceNumber) throws IOException
 	{
 		
 		
@@ -248,7 +248,7 @@ public class DeliveryServiceControl {
 		return resultJson.toString();
 	}
 	
-	public String SearchCJ(String invoiceNumber) throws IOException
+	private String SearchCJ(String invoiceNumber) throws IOException
 	{
 		String baseURL="https://www.cjlogistics.com";
 		String path="/ko/tool/parcel/tracking";
@@ -297,9 +297,9 @@ public class DeliveryServiceControl {
 		
 	}
 	
-	public void SearchLotte(String invoiceNumber) throws IOException
+	private String SearchLotte(String invoiceNumber) throws IOException
 	{
-		String baseURL="https://www.lotteglogis.com/";
+		String baseURL="https://www.lotteglogis.com";
 		String path="";
 		String reData="";
 		String postData="";
@@ -337,12 +337,14 @@ public class DeliveryServiceControl {
 		doc=Jsoup.parse(reData);
 		
 		JSONObject deliveryState=new JSONObject();
-		
+		JSONArray deliveryInfoList=new JSONArray();
+		JSONObject deliveryInfo=new JSONObject();
+		JSONObject resultInfo=new JSONObject();
 		
 		Elements tblH_mt60=doc.getElementsByClass("tblH mt60");
 		Elements tblH=doc.getElementsByClass("tblH").not("tblH mt60");
 		
-		for(Element element : tblH_mt60)
+		/*for(Element element : tblH_mt60)
 		{
 			Elements cellList=element.select("tbody>tr>td");
 			deliveryState.put("invoicenumber", cellList.get(0).text());
@@ -350,26 +352,65 @@ public class DeliveryServiceControl {
 			deliveryState.put("approach", cellList.get(2).text());
 			deliveryState.put("deliveryresult", cellList.get(3).text());
 
-		}
-		
+		}*/
+		int elementCount=0;
 		for(Element element:tblH)
 		{
 			Elements cellList=element.select("tbody>tr");
 			for(Element cell : cellList)
 			{
 				Elements dataList=cell.select("td");
-				System.out.println(dataList.get(0).text());
-				System.out.println(dataList.get(1).text());
-				System.out.println(dataList.get(2).text());
-				System.out.println(dataList.get(3).text());
+				if(elementCount==0)
+				{
+					deliveryState.put("invoicenumber", dataList.get(0).text());		// 운송장 번호
+					deliveryState.put("sender", dataList.get(1).text());			// 발송지
+					deliveryState.put("approach", dataList.get(2).text());			// 도착지
+					deliveryState.put("deliveryresult", dataList.get(3).text());	// 배달결과
+					
+					elementCount++;
+				}
+				else
+				{
+					deliveryInfo.put("stage", dataList.get(0).text());			// 단계
+					deliveryInfo.put("time", dataList.get(1).text());			// 시간
+					deliveryInfo.put("presentspot", dataList.get(2).text());	// 현재위치
+					deliveryInfo.put("process", dataList.get(3).text());		// 처리현황
+					
+					deliveryInfoList.put(deliveryInfo);
+				}
+			
 			}
 		}
 		
+		resultInfo.put("deliveryState", deliveryState);
+		resultInfo.put("deliveryInfo", deliveryInfoList);
+		
+		return resultInfo.toString();
+		
 	}
 	
-	
-	public String SearchPostOffice(String invoiceNumber) throws IOException
+
+	private String SearchPostOffice(String invoiceNumber) throws IOException
 	{
+		String baseURL="https://service.epost.go.kr";
+		String path="";
+		String reData="";
+		String postData="";
+		
+		//Condition Check
+		path="/iservice/usr/trace/usrtrc001k01.jsp";
+		_httpHandler.ClearHeader();
+		_httpHandler.AddRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+		_httpHandler.AddRequestHeader("Accept-Encoding","gzip, deflate, br");
+		_httpHandler.AddRequestHeader("Accept-Language","ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
+		_httpHandler.AddRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+		_httpHandler.AddRequestHeader("Connection","keep-alive");
+		_httpHandler.AddRequestHeader("Host","service.epost.go.kr");
+		
+		_httpHandler.Send(baseURL+path);
+		reData=_httpHandler.getResponseText();
+		
+		
 		return "";
 	}
 	
