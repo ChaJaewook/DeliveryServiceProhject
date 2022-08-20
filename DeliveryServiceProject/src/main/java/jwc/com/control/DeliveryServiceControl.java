@@ -422,8 +422,6 @@ public class DeliveryServiceControl {
 		_httpHandler.AddRequestHeader("Origin","https://service.epost.go.kr");
 		_httpHandler.AddRequestHeader("Connection","keep-alive");
 		_httpHandler.AddRequestHeader("Host","service.epost.go.kr");
-		/*postData="sid1="+invoiceNumber+"&";
-		postData+="displayHeader=";*/
 		postData=String.format("sid1=%s&displayHeader=", invoiceNumber);
 		
 
