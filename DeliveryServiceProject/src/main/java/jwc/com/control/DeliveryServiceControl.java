@@ -410,8 +410,28 @@ public class DeliveryServiceControl {
 		_httpHandler.Send(baseURL+path);
 		reData=_httpHandler.getResponseText();
 		
+		path="/trace.RetrieveDomRigiTraceList.comm";
+		_httpHandler.ClearHeader();
+		_httpHandler.AddRequestHeader("Cache-Control","max-age=0");
+		_httpHandler.AddRequestHeader("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+		_httpHandler.AddRequestHeader("Accept-Encoding","gzip, deflate, br");
+		_httpHandler.AddRequestHeader("Accept-Language","ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7");
+		_httpHandler.AddRequestHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36");
+		_httpHandler.AddRequestHeader("Content-Type","application/x-www-form-urlencoded");
+		//_httpHandler.AddRequestHeader("Referer","https://service.epost.go.kr/iservice/usr/trace/usrtrc001k01.jsp");
+		_httpHandler.AddRequestHeader("Origin","https://service.epost.go.kr");
+		_httpHandler.AddRequestHeader("Connection","keep-alive");
+		_httpHandler.AddRequestHeader("Host","service.epost.go.kr");
+		/*postData="sid1="+invoiceNumber+"&";
+		postData+="displayHeader=";*/
+		postData=String.format("sid1=%s&displayHeader=", invoiceNumber);
 		
+
+		_httpHandler.Send(baseURL+path,postData);
+		reData=_httpHandler.getResponseText();
+		System.out.println(reData);
 		return "";
+		
 	}
 	
 }
