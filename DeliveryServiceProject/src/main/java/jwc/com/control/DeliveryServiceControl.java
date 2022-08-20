@@ -1,5 +1,6 @@
 package jwc.com.control;
 import java.io.IOException;
+import java.util.List;
 
 import org.json.JSONObject;
 import org.json.JSONArray;
@@ -428,6 +429,16 @@ public class DeliveryServiceControl {
 		_httpHandler.Send(baseURL+path,postData);
 		reData=_httpHandler.getResponseText();
 		System.out.println(reData);
+		
+		doc=Jsoup.parse(reData);
+		Elements table_col=doc.getElementsByClass("table_col");
+		for(Element table_col_element : table_col)
+		{
+			List<String> tbList=table_col_element.select("tbody>tr").eachText();
+
+			
+		}
+		
 		return "";
 		
 	}
