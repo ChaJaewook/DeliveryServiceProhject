@@ -55,7 +55,7 @@ public class DeliveryServiceControl {
 				result=SearchLotte(invoiceNumber);
 				break;
 			case "PostOffice"://우체국 택배
-				SearchPostOffice(invoiceNumber);
+				result=SearchPostOffice(invoiceNumber);
 				break;
 			default:
 				break;
@@ -432,14 +432,49 @@ public class DeliveryServiceControl {
 		
 		doc=Jsoup.parse(reData);
 		Elements table_col=doc.getElementsByClass("table_col");
+		
+		int i=0;
+		
+		
+		JSONObject deliveryInfoJson=new JSONObject();
+		
+		JSONArray deliveryStateArray=new JSONArray();
+		JSONObject resultJson=new JSONObject();
+		
+		
 		for(Element table_col_element : table_col)
 		{
-			List<String> tbList=table_col_element.select("tbody>tr").eachText();
+			Elements tbList=table_col_element.select("tbody>tr");
+			for(Element tbData : tbList)
+			{
+				if(i==0)
+				{
+					deliveryInfoJson.put("invoicenumver",tbData.child(0).text()); 	// 등기번호
+					deliveryInfoJson.put("sender",tbData.child(1).text()); 			// 보내는 분/접수일자
+					deliveryInfoJson.put("receiver",tbData.child(2).text()); 		// 받는 분
+					deliveryInfoJson.put("deliver",tbData.child(3).text()); 		// 수령인/배달일자
+					deliveryInfoJson.put("deliverykind",tbData.child(4).text()); 	// 취급구분
+					deliveryInfoJson.put("deliverdate",tbData.child(5).text()); 	// 배달일자
+					i++;
+				}
+				else
+				{
+					JSONObject deliveryStateJson=new JSONObject();
+					deliveryStateJson.put("date",tbData.child(0).text()); // 날짜
+					deliveryStateJson.put("time",tbData.child(1).text()); // 시간
+					deliveryStateJson.put("country",tbData.child(2).text()); // 발생국
+					deliveryStateJson.put("process",tbData.child(3).text()); // 처리현황
+					deliveryStateArray.put(deliveryStateJson);
+				}
 
+			}
 			
 		}
 		
-		return "";
+		resultJson.put("deliveryInfo", deliveryInfoJson);
+		resultJson.put("deliveryState",deliveryStateArray);
+		
+		return resultJson.toString();
 		
 	}
 	
