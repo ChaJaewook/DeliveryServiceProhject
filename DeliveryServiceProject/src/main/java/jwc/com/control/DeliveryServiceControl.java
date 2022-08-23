@@ -188,7 +188,7 @@ public class DeliveryServiceControl {
 		}
 		catch(Exception ex)
 		{
-			resultJson.put("Error","스크래핑중 오류 발생");
+			resultJson.put("Error",ex.getMessage());
 			return resultJson.toString();
 		}
 		finally
@@ -206,6 +206,11 @@ public class DeliveryServiceControl {
 		
 		try
 		{
+			//운송장 번호 길이 체크
+			invoiceNumber=invoiceNumber.replaceAll("[^0-9]","");
+			if(invoiceNumber.length()!=12)
+				throw new Exception("운송장 길이가 다릅니다.");
+			
 			String baseURL="http://www.hanjin.co.kr";
 			String path="";
 			String reData="";
@@ -288,7 +293,7 @@ public class DeliveryServiceControl {
 		}
 		catch(Exception ex)
 		{
-			resultJson.put("Error","스크래핑중 오류 발생");
+			resultJson.put("Error",ex.getMessage());
 			return resultJson.toString();
 		}
 		finally
@@ -303,6 +308,11 @@ public class DeliveryServiceControl {
 	{
 		try
 		{
+			//운송장 번호 길이 체크
+			invoiceNumber=invoiceNumber.replaceAll("[^0-9]","");
+			if(invoiceNumber.length()!=12)
+				throw new Exception("운송장 길이가 다릅니다.");
+			
 			String baseURL="https://www.cjlogistics.com";
 			String path="/ko/tool/parcel/tracking";
 			String reData="";
@@ -349,7 +359,7 @@ public class DeliveryServiceControl {
 		catch(Exception ex)
 		{
 			JSONObject resultJson=new JSONObject();
-			resultJson.put("Error","스크래핑중 오류 발생");
+			resultJson.put("Error",ex.getMessage());
 			return resultJson.toString();
 		}
 		finally
@@ -366,6 +376,11 @@ public class DeliveryServiceControl {
 		JSONObject resultInfo=new JSONObject();
 		try
 		{
+			//운송장 번호 길이 체크
+			invoiceNumber=invoiceNumber.replaceAll("[^0-9]","");
+			if(invoiceNumber.length()!=12)
+				throw new Exception("운송장 길이가 다릅니다.");
+			
 			String baseURL="https://www.lotteglogis.com";
 			String path="";
 			String reData="";
@@ -447,7 +462,7 @@ public class DeliveryServiceControl {
 		}
 		catch(Exception ex)
 		{
-			resultInfo.put("Error","스크래핑중 오류 발생");
+			resultInfo.put("Error",ex.getMessage());
 			return resultInfo.toString();
 		}
 		finally
@@ -459,12 +474,16 @@ public class DeliveryServiceControl {
 		
 	}
 	
-
 	private String SearchPostOffice(String invoiceNumber) throws IOException
 	{
 		JSONObject resultJson=new JSONObject();
 		try
 		{
+			//운송장 번호 길이 체크
+			invoiceNumber=invoiceNumber.replaceAll("[^0-9]","");
+			if(invoiceNumber.length()!=13)
+				throw new Exception("운송장 길이가 다릅니다.");
+			
 			String baseURL="https://service.epost.go.kr";
 			String path="";
 			String reData="";
@@ -505,11 +524,11 @@ public class DeliveryServiceControl {
 			doc=Jsoup.parse(reData);
 			Elements table_col=doc.getElementsByClass("table_col");
 			
-			int i=0;
-			
-			
+			int i=0;		
+			//배송 정보를 담을 devliveryInfoJson
 			JSONObject deliveryInfoJson=new JSONObject();
 			
+			//배송상태들을 담을 deliveryStateArray
 			JSONArray deliveryStateArray=new JSONArray();
 			
 			
@@ -532,8 +551,8 @@ public class DeliveryServiceControl {
 					else
 					{
 						JSONObject deliveryStateJson=new JSONObject();
-						deliveryStateJson.put("date",tbData.child(0).text()); // 날짜
-						deliveryStateJson.put("time",tbData.child(1).text()); // 시간
+						deliveryStateJson.put("date",tbData.child(0).text()); 	 // 날짜
+						deliveryStateJson.put("time",tbData.child(1).text()); 	 // 시간
 						deliveryStateJson.put("country",tbData.child(2).text()); // 발생국
 						deliveryStateJson.put("process",tbData.child(3).text()); // 처리현황
 						deliveryStateArray.put(deliveryStateJson);
@@ -550,7 +569,7 @@ public class DeliveryServiceControl {
 		}
 		catch(Exception ex)
 		{
-			resultJson.put("Error","스크래핑중 오류 발생");
+			resultJson.put("Error",ex.getMessage());
 			return resultJson.toString();
 			
 		}
