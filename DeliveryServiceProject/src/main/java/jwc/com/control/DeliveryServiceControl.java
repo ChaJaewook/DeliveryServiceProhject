@@ -228,10 +228,15 @@ public class DeliveryServiceControl {
 			
 			_httpHandler.Send(baseURL+path);
 			reData=_httpHandler.getResponseText();
+			if(!reData.contains("‘-’을 제외한 운송장번호를 입력하세요."))
+				throw new Exception("홈페이지가 변경됐습니다.");
 			
+			//Send data
 			path=String.format("/kor/CMS/DeliveryMgr/WaybillResult.do?mCode=MN038&wblnum=%s&schLang=KR&wblnumText=", invoiceNumber);
 			_httpHandler.Send(baseURL+path);
 			reData=_httpHandler.getResponseText();
+			if(reData.contains("운송장이 등록되지 않았거나 보내는 분(업체)이 상품을 준비 중 입니다."))
+				throw new Exception("해당 운송장을 조회 할 수 없습니다.");
 			
 			//배송내역에 대한 json파싱
 			
