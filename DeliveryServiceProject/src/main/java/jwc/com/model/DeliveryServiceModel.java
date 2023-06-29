@@ -1,6 +1,9 @@
 package jwc.com.model;
 
-public class DeliveryServiceModel {
+import lombok.Getter;
+
+@Getter
+class DeliveryServiceModel {
 	
 	private String serviceName;
 	public String getServiceName() {
