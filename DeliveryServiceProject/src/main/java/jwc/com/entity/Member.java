@@ -1,9 +1,6 @@
 package jwc.com.entity;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -28,5 +25,13 @@ public class Member {
 
     @OneToMany(mappedBy = "member")
     private List<PostBox> postBox=new ArrayList<>();
+
+    @Builder
+    public Member(String name, String email, String password)
+    {
+       this.name=name;
+       this.email=email;
+       this.password=password;
+    }
 
 }
